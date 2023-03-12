@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<!--"StAuth10244: I Nicholas Milanovic, 000292701 certify that this material is my original work. 
+No other person's work has been used without due acknowledgement. I have not made my work available to anyone else."-->
+    <head>
+        <title>Roll The Dice</title>
+        <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+        <style>
+            html{
+                text-align: center;
+                font-family: Comic Sans, Comic Sans MS, cursive;
+            }
+            #container1{
+                text-align: center;
+                font-family: Comic Sans, Comic Sans MS, cursive;
+            }
+            .grid-container{
+                display: grid;
+                gap: 10px;
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+                background-color: #2196f3;
+                padding: 10px;
+            }
+            .grid-item {
+                background-color: rgba(255, 255, 255, 0.8);
+                border: 1px solid black;
+                padding: 10px;
+                font-size: 30px;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container1"></div>
+        <div id="diceContainer"></div>
+        <div id="numOfDiceContainer"></div>
+        <script type="text/babel">
+            
+            class TitleComponent extends React.Component
+            {
+                render() {return <h1>Let's Play Dice!</h1>;}
+            };
+
+            class Dice extends React.Component{
+                render() {
+                    return(
+                        <div className="grid-item" onClick={() => this.props.increaseOne(this.props.dice_id)}>
+                            {this.props.diceNum}
+                        </div>
+                    )
+                }
+            }
+
+            class NewDice extends React.Component {
+                constructor(props) {
+                    super(props);
+                    this.state = { num_dice: 0, num_on_dice: 1, dice: [], last_id: 0 };
+                    this.increaseOne = this.increaseOne.bind(this);
+                }
+              
+                changeNumDice(callback) {
+                    var newAmountOfDice = this.state.num_dice + 1;
+                    this.setState({ num_dice: newAmountOfDice }, () => {
+                        callback();
+                    });
+                }
+              
+                resetDice(callback) {
+                    var resetNumber = 1;
+                    this.setState({ num_dice: resetNumber, num_on_dice: 1, last_id: 0 }, () => {
+                        callback();
+                    });
+                }
+              
+                increaseNumberOfSides(callback) {
+                    if (this.state.num_on_dice < 20) {
+                        var increaseSide = this.state.num_on_dice + 1;
+                    } else {
+                        increaseSide = 20;
+                    }
+                    this.setState({ num_on_dice: increaseSide }, () => {
+                        callback();
+                    });
+                }
+              
+                decreaseNumberOfSides(callback) {
+                    if (this.state.num_on_dice > 1) {
+                        var decreaseSide = this.state.num_on_dice - 1;
+                    } else {
+                        decreaseSide = 1;
+                    }
+                    this.setState({ num_on_dice: decreaseSide }, () => {
+                        callback();
+                    });
+                }
+              
+                makeDice() {
+                    let new_dice = [];
+                    let total = this.state.num_dice;
+                    let new_id = this.state.last_id + 1;
+                    for (let i = 0; i < total; i++) {
+                        new_dice[i] = { last_id: new_id, text: this.state.num_on_dice };
+                        new_id++;
+                    }
+                    this.setState({ dice: new_dice, last_id: new_id - 1 });
+                }
+              
+                increaseOne(last_id) {
+                    const new_dice = this.state.dice.slice();
+                    for (let i = 0; i < new_dice.length; i++) {
+                        if (new_dice[i].last_id === last_id) {
+                        const increase = new_dice[i].text + 1;
+                        if(increase < 21){
+                            new_dice[i].text = increase;
+                        }
+                        this.setState({ dice: new_dice }, () => {
+                            console.log(increase);
+                        });
+                        break;
+                        }
+                    }
+                }
+
+                rollDice() {
+                    const new_dice = this.state.dice.map((die) => ({
+                      ...die,
+                      text: Math.trunc(Math.random() * 20) + 1,
+                    }));
+                    this.setState({ dice: new_dice });
+                }
+              
+                showDice(dice) {
+                    console.log(dice.text);
+                    return (
+                        <Dice
+                        key={dice.last_id}
+                        last_id={dice.last_id}
+                        diceNum={dice.text}
+                        increaseOne={() => this.increaseOne(dice.last_id)}
+                        />
+                    );
+                }
+
+                render(){
+                    var that = this;
+                    const dice = this.state.dice.map((die) => {
+                        return (
+                            <Dice 
+                                key={die.key} 
+                                id={die.id}
+                                diceNum={die.text}
+                                num_on_dice={die.num_on_dice}
+                                increaseOne={() => this.increaseOne(die.last_id)}
+                            ></Dice>
+                        )
+                    });
+                    return(
+                        <div>
+                            <span>Number of Dice: </span>
+                            <p onClick={() => this.changeNumDice(function() {that.makeDice()})}>{this.state.num_dice}</p>
+                            <p>Click on the number above to add dice to the screen</p>
+                            <br/>
+                            <p>Click the &#x2191; button to increase the number of sides up to 20, and the &#x2193; button to decrease the number of sides down to 1</p>
+                            <input type="button" id="upBtn" onClick={() => this.increaseNumberOfSides(function() {that.makeDice()})} value="&#x2191;"/>
+                            <input type="button" id="downBtn" onClick={() => this.decreaseNumberOfSides(function() {that.makeDice()})} value="&#x2193;"/>
+                            <br/><br/>
+                            <input type="button" onClick={() => this.rollDice()} value="ROLL DICE" />
+                            <br/><br/>
+                            <input type="button" onClick={() => this.resetDice(function() {that.makeDice()})} value="RESET"/>
+                            <br/><br/>
+                            <div className="grid-container">
+                                {dice}
+                            </div>
+                        </div>
+                    )                    
+                }
+            }
+
+
+            ReactDOM.render(
+                <TitleComponent />,
+                document.querySelector("#container1")
+            );
+
+            ReactDOM.render(
+                <NewDice />,
+                document.querySelector("#diceContainer")
+            );
+        </script>
+    </body>
+</html>
